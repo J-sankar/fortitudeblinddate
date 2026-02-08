@@ -4,38 +4,72 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
 
-@layer base {
-  :root {
-    --foreground: 30 25% 92%;
-
-    --primary: 348 32% 62%;
-    --primary-foreground: 30 30% 98%;
-
-    --border: 12 10% 20%;
-  }
-
-  body {
-  min-height: 100vh;
-  font-family: "Inter", system-ui, sans-serif;
-  color: hsl(var(--foreground));
-
-  background:
-    radial-gradient(
-      ellipse 135% 95% at 50% 55%,
-      hsla(345, 26%, 15%, 0.26) 0%,
-      transparent 58%
-    ),
-    linear-gradient(
-      180deg,
-      hsl(15, 9%, 5%) 0%,
-      hsl(345, 12%, 7%) 42%,
-      hsl(15, 9%, 4%) 100%
-    );
+html,
+body {
+  height: 100%;
 }
 
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  color: white;
+}
 
+/* ===== Reference-style background ===== */
+.bg-reference {
+  background:
+    radial-gradient(
+      1200px 700px at 50% -200px,
+      rgba(216, 167, 177, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 600px at -200px 50%,
+      rgba(216, 167, 177, 0.14),
+      transparent 75%
+    ),
+    radial-gradient(
+      900px 600px at 120% 60%,
+      rgba(216, 167, 177, 0.10),
+      transparent 75%
+    ),
+    #0b0a0a;
+}
 
+/* ===== Hearts styling (reference accurate) ===== */
+.heart-lg {
+  width: 32px;
+  height: 32px;
+  stroke: rgba(216, 167, 177, 0.45);
+  fill: rgba(216, 167, 177, 0.12);
+}
 
+.heart-md {
+  width: 24px;
+  height: 24px;
+  stroke: rgba(216, 167, 177, 0.4);
+  fill: rgba(216, 167, 177, 0.1);
+}
 
+.heart-sm {
+  width: 18px;
+  height: 18px;
+  stroke: rgba(216, 167, 177, 0.35);
+  fill: rgba(216, 167, 177, 0.08);
+}
 
+.heart-xs {
+  width: 14px;
+  height: 14px;
+  stroke: rgba(216, 167, 177, 0.3);
+  fill: rgba(216, 167, 177, 0.06);
+}
+
+/* subtle divider line */
+.rose-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(216, 167, 177, 0.25),
+    transparent
+  );
 }
