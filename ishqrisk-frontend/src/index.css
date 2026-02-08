@@ -14,45 +14,53 @@ body {
   color: white;
 }
 
-/* ===== Reference-style background ===== */
+/* ===== Reference-style background (desktop + default) ===== */
 .bg-reference {
   background:
-    /* top ambient tint (darker + softer) */
     radial-gradient(
       1200px 700px at 50% -200px,
       rgba(200, 145, 155, 0.12),
       transparent 72%
     ),
-
-    /* subtle horizontal flow through center (less bright) */
     linear-gradient(
       to right,
       rgba(200, 145, 155, 0.035),
       rgba(200, 145, 155, 0.06),
       rgba(200, 145, 155, 0.035)
     ),
-
-    /* left side wash */
     radial-gradient(
       900px 600px at -200px 55%,
       rgba(200, 145, 155, 0.09),
       transparent 78%
     ),
-
-    /* right side wash */
     radial-gradient(
       900px 600px at 120% 55%,
       rgba(200, 145, 155, 0.08),
       transparent 78%
     ),
-
-    /* base */
     #0b0a0a;
 }
 
+/* ===== Mobile quieting (same vibe, lower intensity) ===== */
+@media (max-width: 640px) {
+  .bg-reference {
+    background:
+      radial-gradient(
+        1200px 700px at 50% -300px,
+        rgba(200, 145, 155, 0.10),
+        transparent 75%
+      ),
+      linear-gradient(
+        to right,
+        rgba(200, 145, 155, 0.03),
+        rgba(200, 145, 155, 0.05),
+        rgba(200, 145, 155, 0.03)
+      ),
+      #0b0a0a;
+  }
+}
 
-
-/* ===== Hearts styling (reference accurate) ===== */
+/* ===== Hearts styling (reference-accurate) ===== */
 .heart-lg {
   width: 32px;
   height: 32px;
