@@ -6,67 +6,36 @@
 
 @layer base {
   :root {
-    --background: 15 10% 5%;
     --foreground: 30 25% 92%;
 
-    --card: 15 12% 8%;
-    --card-foreground: 30 25% 92%;
-
-   --primary: 348 32% 62%;
-
+    --primary: 348 32% 62%;
     --primary-foreground: 30 30% 98%;
 
-    --secondary: 12 10% 13%;
-    --secondary-foreground: 30 20% 90%;
-
-    --muted: 12 8% 13%;
-    --muted-foreground: 12 8% 50%;
-
-    --accent: 41 18% 14%;
-    --accent-foreground: 30 20% 90%;
-
-    --border: 12 10% 15%;
-    --ring: 41 53% 55%;
-    --radius: 0.75rem;
+    --border: 12 10% 20%;
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    min-height: 100vh;
-    font-family: "Inter", system-ui, sans-serif;
-  }
-
-  body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  color: hsl(var(--foreground));
 
   background:
-    /* Hero glow — THIS is the main one you should SEE */
     radial-gradient(
-      ellipse 50% 35% at 50% 45%,
-      hsla(348, 55%, 65%, 0.22) 0%,
-      hsla(348, 55%, 55%, 0.14) 35%,
-      transparent 65%
+      ellipse 135% 95% at 50% 55%,
+      hsla(345, 26%, 15%, 0.26) 0%,
+      transparent 58%
     ),
-
-    /* Secondary glow — adds depth */
-    radial-gradient(
-      ellipse 45% 40% at 20% 65%,
-      hsla(348, 50%, 55%, 0.16) 0%,
-      transparent 70%
-    ),
-
-    /* Ambient warmth — stops pure black feeling */
-    radial-gradient(
-      ellipse 80% 70% at 50% 50%,
-      hsla(348, 45%, 50%, 0.08) 0%,
-      transparent 80%
+    linear-gradient(
+      180deg,
+      hsl(15, 9%, 5%) 0%,
+      hsl(345, 12%, 7%) 42%,
+      hsl(15, 9%, 4%) 100%
     );
 }
 
-  
+
+
+
+
+
 }

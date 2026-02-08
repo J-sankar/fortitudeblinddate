@@ -2,34 +2,11 @@ import Navbar from "../components/layout/Navbar";
 
 export default function Landing() {
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6">
-        
-        {/* HERO-LOCAL GLOW (this is the key change) */}
-        <div
-  className="
-    absolute inset-0
-    flex items-center justify-center
-    pointer-events-none
-    -z-10
-  "
->
-  <div
-    className="
-      w-[1000px] h-[600px]
-      bg-primary/14
-      blur-[260px]
-      rounded-full
-    "
-  />
-</div>
-
-
-        {/* Content */}
-        <div className="relative z-10 max-w-3xl text-center mt-24">
+      <section className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-3xl text-center mt-24">
 
           {/* Tag */}
           <div
@@ -61,7 +38,7 @@ export default function Landing() {
                 bg-primary text-primary-foreground
                 font-semibold px-8 py-3 rounded-full
                 hover:scale-[1.04]
-                hover:shadow-xl hover:shadow-primary/40
+                hover:shadow-xl hover:shadow-primary/30
                 transition-all duration-300
               "
             >
