@@ -1,26 +1,41 @@
+import { useEffect } from "react";
+
 export default function Waiting() {
+
+  useEffect(() => {
+    const scene = document.querySelector(".parallax-scene");
+
+    const handleMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+
+      scene.style.setProperty("--px", `${x}px`);
+      scene.style.setProperty("--py", `${y}px`);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-hidden text-white perspective-scene">
 
-      {/* BACKGROUND */}
+      {/* BASE */}
       <div className="absolute inset-0 bg-waiting-base" />
 
-      {/* 3D DEPTH LAYERS */}
-      <div className="absolute inset-0 -z-10 preserve-3d">
+      {/* PARALLAX DEPTH */}
+      <div className="absolute inset-0 -z-10 preserve-3d parallax-scene">
 
-        {/* Far layer */}
         <div className="depth-layer far-layer">
-          <div className="glow glow-far" />
+          <div className="glow glow-far orbit-slow" />
         </div>
 
-        {/* Mid layer */}
         <div className="depth-layer mid-layer">
-          <div className="glow glow-mid" />
+          <div className="glow glow-mid orbit-medium" />
         </div>
 
-        {/* Near layer */}
         <div className="depth-layer near-layer">
-          <div className="glow glow-near" />
+          <div className="glow glow-near orbit-fast" />
         </div>
 
       </div>
@@ -43,7 +58,6 @@ export default function Waiting() {
             Just a quiet moment before something new begins.
           </p>
 
-          {/* Heart core */}
           <div className="mx-auto h-16 w-16 rounded-full heart-core">
             <div className="heart-inner" />
           </div>

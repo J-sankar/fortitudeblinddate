@@ -586,3 +586,57 @@ body {
 .animate-fade-in {
   animation: fadeIn 1.2s ease-out forwards;
 }
+
+/* === PARALLAX VARIABLES === */
+.parallax-scene {
+  --px: 0px;
+  --py: 0px;
+}
+
+/* Apply parallax */
+.far-layer {
+  transform: translateZ(-300px)
+    translate(calc(var(--px) * 0.2), calc(var(--py) * 0.2));
+}
+
+.mid-layer {
+  transform: translateZ(-150px)
+    translate(calc(var(--px) * 0.4), calc(var(--py) * 0.4));
+}
+
+.near-layer {
+  transform: translateZ(-50px)
+    translate(calc(var(--px) * 0.6), calc(var(--py) * 0.6));
+}
+
+/* === ORBITAL MOTION === */
+@keyframes orbit {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(15px, -10px); }
+  50%  { transform: translate(0, -20px); }
+  75%  { transform: translate(-15px, -10px); }
+  100% { transform: translate(0, 0); }
+}
+
+.orbit-slow {
+  animation: orbit 18s ease-in-out infinite;
+}
+
+.orbit-medium {
+  animation: orbit 14s ease-in-out infinite;
+}
+
+.orbit-fast {
+  animation: orbit 10s ease-in-out infinite;
+}
+
+/* === DEPTH BREATHING === */
+@keyframes depthBreathe {
+  0%   { transform: translateZ(-150px); }
+  50%  { transform: translateZ(-130px); }
+  100% { transform: translateZ(-150px); }
+}
+
+.mid-layer {
+  animation: depthBreathe 12s ease-in-out infinite;
+}
