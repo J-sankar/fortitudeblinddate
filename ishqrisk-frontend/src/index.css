@@ -12,7 +12,8 @@
     --card: 15 12% 8%;
     --card-foreground: 30 25% 92%;
 
-    --primary: 348 42% 72%;
+   --primary: 348 32% 62%;
+
     --primary-foreground: 30 30% 98%;
 
     --secondary: 12 10% 13%;
@@ -44,24 +45,25 @@
   z-index: 0;
 
   background:
-    /* Main soft glow (center-left) */
+    /* Hero glow — THIS is the main one you should SEE */
     radial-gradient(
-      ellipse 55% 45% at 25% 45%,
-      hsla(348, 42%, 55%, 0.12) 0%,
+      ellipse 50% 35% at 50% 45%,
+      hsla(348, 55%, 65%, 0.22) 0%,
+      hsla(348, 55%, 55%, 0.14) 35%,
       transparent 65%
     ),
 
-    /* Secondary glow (bottom-right) */
+    /* Secondary glow — adds depth */
     radial-gradient(
-      ellipse 45% 40% at 80% 75%,
-      hsla(348, 42%, 50%, 0.04) 0%,
+      ellipse 45% 40% at 20% 65%,
+      hsla(348, 50%, 55%, 0.16) 0%,
       transparent 70%
     ),
 
-    /* Very subtle ambient warmth */
+    /* Ambient warmth — stops pure black feeling */
     radial-gradient(
-      ellipse 70% 60% at 50% 50%,
-      hsla(348, 42%, 45%, 0.05) 0%,
+      ellipse 80% 70% at 50% 50%,
+      hsla(348, 45%, 50%, 0.08) 0%,
       transparent 80%
     );
 }
