@@ -4,16 +4,15 @@ export default function Waiting() {
   const canvasRef = useRef(null);
   const [matchFound, setMatchFound] = useState(false);
 
-  /* ---------------- MOCK MATCH FOUND (REMOVE LATER) ---------------- */
+  /* ---------------- MOCK MATCH FOUND ---------------- */
   useEffect(() => {
     const timer = setTimeout(() => {
       setMatchFound(true);
-    }, 15000); // simulate backend response
-
+    }, 15000);
     return () => clearTimeout(timer);
   }, []);
 
-  /* ---------------- SNOW + SURGE SYSTEM ---------------- */
+  /* ---------------- SNOW SYSTEM (WAITING ONLY) ---------------- */
   useEffect(() => {
     if (matchFound) return;
 
@@ -53,9 +52,7 @@ export default function Waiting() {
       };
     }
 
-    for (let i = 0; i < BASE_SNOW; i++) {
-      snowflakes.push(createSnowflake());
-    }
+    for (let i = 0; i < BASE_SNOW; i++) snowflakes.push(createSnowflake());
 
     function inSlowZone(f) {
       return (
@@ -69,7 +66,6 @@ export default function Waiting() {
     function animate() {
       ctx.clearRect(0, 0, width, height);
 
-      /* --- SURGE LOGIC --- */
       surgeTimer++;
       if (surgeTimer > rand(1500, 2600)) {
         surgeTarget = 1;
@@ -78,11 +74,9 @@ export default function Waiting() {
       if (surge > 0.95) surgeTarget = 0;
       surge += (surgeTarget - surge) * 0.002;
 
-      /* --- WIND --- */
       windTarget = surge * rand(-0.6, 0.6);
       wind += (windTarget - wind) * 0.01;
 
-      /* --- DYNAMIC SNOW COUNT --- */
       const desiredCount =
         BASE_SNOW + Math.floor((MAX_SNOW - BASE_SNOW) * surge);
 
@@ -90,7 +84,6 @@ export default function Waiting() {
         snowflakes.push(createSnowflake());
       while (snowflakes.length > desiredCount) snowflakes.pop();
 
-      /* --- DRAW SNOW --- */
       for (const f of snowflakes) {
         const slowFactor = inSlowZone(f) ? 0.35 : 1;
         const speedBoost = 1 + surge * 0.6;
@@ -123,9 +116,18 @@ export default function Waiting() {
         <canvas ref={canvasRef} className="absolute inset-0 z-0" />
       )}
 
+      {/* ---------------- SOFT BLOOMS (MATCH FOUND) ---------------- */}
+      {matchFound && (
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="bloom bloom-1" />
+          <div className="bloom bloom-2" />
+          <div className="bloom bloom-3" />
+        </div>
+      )}
+
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
         {!matchFound ? (
-          /* ---------------- WAITING STATE ---------------- */
+          /* -------- WAITING -------- */
           <div>
             <p className="mb-3 text-xs tracking-[0.3em] text-white/40">
               WAITING
@@ -148,7 +150,7 @@ export default function Waiting() {
             <div className="mt-14 heart-pulse" />
           </div>
         ) : (
-          /* ---------------- MATCH FOUND STATE ---------------- */
+          /* -------- MATCH FOUND -------- */
           <div className="floating-card">
             <p className="mb-3 text-xs tracking-widest text-white/50">
               MATCH FOUND
@@ -193,14 +195,8 @@ export default function Waiting() {
           background: #f3b6c0;
           border-radius: 50%;
         }
-        .heart-pulse::before {
-          top: -11px;
-          left: 0;
-        }
-        .heart-pulse::after {
-          left: 11px;
-          top: 0;
-        }
+        .heart-pulse::before { top: -11px; left: 0; }
+        .heart-pulse::after { left: 11px; top: 0; }
 
         .floating-card {
           animation: float 7.5s ease-in-out infinite;
@@ -227,16 +223,58 @@ export default function Waiting() {
           );
         }
 
+        /* ---- BLOOMS ---- */
+        .bloom {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(120px);
+          opacity: 0.35;
+          animation: bloom 12s ease-in-out infinite;
+        }
+
+        .bloom-1 {
+          width: 520px;
+          height: 520px;
+          background: rgba(243,182,192,0.6);
+          top: 20%;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .bloom-2 {
+          width: 420px;
+          height: 420px;
+          background: rgba(255,240,220,0.45);
+          bottom: 25%;
+          left: 25%;
+          animation-delay: 4s;
+        }
+
+        .bloom-3 {
+          width: 360px;
+          height: 360px;
+          background: rgba(243,182,192,0.35);
+          bottom: 20%;
+          right: 20%;
+          animation-delay: 7s;
+        }
+
         @keyframes pulse {
-          0% { transform: rotate(-45deg) scale(1); opacity: 0.8; }
-          50% { transform: rotate(-45deg) scale(1.15); opacity: 1; }
-          100% { transform: rotate(-45deg) scale(1); opacity: 0.8; }
+          0% { transform: rotate(-45deg) scale(1); }
+          50% { transform: rotate(-45deg) scale(1.15); }
+          100% { transform: rotate(-45deg) scale(1); }
         }
 
         @keyframes float {
           0% { transform: translateY(0px); }
           50% { transform: translateY(-14px); }
           100% { transform: translateY(0px); }
+        }
+
+        @keyframes bloom {
+          0% { transform: scale(0.95); opacity: 0.25; }
+          50% { transform: scale(1.05); opacity: 0.45; }
+          100% { transform: scale(0.95); opacity: 0.25; }
         }
       `}</style>
     </div>

@@ -14,3 +14,18 @@ After this they both will be able to chat for a limited time , and at this momen
 After the time is over , both of them will get a button asking if they want to continue , if both of them give yes then the profiles will be visible , if even one of them says no then they will exit . 
 
 This is to make sure that even if anyone is rejected after the chat phase , it doesnt create any awkwardness when they meet in college afterwards , or any other consequences.
+
+## How to use it 
+
+* First Make sure that you are in the correct file 
+
+ cd ishqrisk-frontend
+
+ first install the dependencies 
+ npm install 
+
+ Run  
+ npm run dev 
+
+
+
