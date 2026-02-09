@@ -1,4 +1,6 @@
+import { Routes, Route, Navigate} from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+
 import Landing from "./pages/Landing";
 import BasicInfo from "./pages/BasicInfo";
 import Preferences from "./pages/Preferences";
@@ -9,20 +11,35 @@ export default function App() {
 
   if (loading) return <div>Loading...</div>;
 
-  if (!user) return <Landing />;
-
-  // profile may not exist yet (first login)
-  if (!profile || profile.onboarding_step === "basic") {
-    return <BasicInfo />;
+  // ⭐ Not logged in
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="*" element={<Landing />} />
+      </Routes>
+    );
   }
 
-  if (profile.onboarding_step === "preferences") {
-    return <Preferences />;
-  }
+  // ⭐ Decide onboarding redirect
+  const getOnboardingRoute = () => {
+    if (!profile || profile.onboarding_step === "basic") return "/basic";
+    if (profile.onboarding_step === "preferences") return "/preferences";
+    if (profile.onboarding_step === "qna") return "/qna";
+    return "/done";
+  };
 
-  if (profile.onboarding_step === "qna") {
-    return <Questionnaire />
-  }
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to={getOnboardingRoute()} />} />
 
-  return <div>Done</div>;
+      <Route path="/basic" element={<BasicInfo />} />
+      <Route path="/preferences" element={<Preferences />} />
+      <Route path="/qna" element={<Questionnaire />} />
+
+      <Route path="/done" element={<div>Done</div>} />
+
+      {/* fallback */}
+      <Route path="*" element={<Navigate to={getOnboardingRoute()} />} />
+    </Routes>
+  );
 }

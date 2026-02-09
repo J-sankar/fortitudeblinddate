@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { generateNickname } from "../utils/generateNickName";
+import { useNavigate } from 'react-router-dom';
 
 const templates = [
   { id: "minimal", name: "Quiet Reveal", vibe: "Minimal · Elegant" },
@@ -10,8 +11,10 @@ const templates = [
 ];
 
 export default function BasicInfo() {
-  const nickname = generateNickname()
-  console.log(nickname)
+  const navigate = useNavigate();
+  const [autoNickname] = useState(() => generateNickname());
+
+  console.log(autoNickname)
   const { user } = useAuth();
 
   const [selectedTemplate, setSelectedTemplate] = useState("minimal");
@@ -30,23 +33,18 @@ export default function BasicInfo() {
 
   // ⭐ Autofill name from OAuth
   useEffect(() => {
-    if (!user?.user_metadata?.full_name) return;
+  if (!user?.user_metadata?.full_name) return;
 
-    const parts = user.user_metadata.full_name.split(" ");
+  const parts = user.user_metadata.full_name.split(" ");
 
-    // ⭐ Auto nickname logic
-    const autoNickname =
-      parts[0]?.length > 6
-        ? parts[0].slice(0, 6)
-        : parts[0];
+  setForm((prev) => ({
+    ...prev,
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ") || "",
+    nickname: autoNickname || "",
+  }));
+}, [user, autoNickname]);
 
-    setForm((prev) => ({
-      ...prev,
-      firstName: parts[0] || "",
-      lastName: parts.slice(1).join(" ") || "",
-      nickname: nickname || "",   // ⭐ ADD THIS
-    }));
-  }, [user]);
 
 
   // ⭐ Upload + Save
@@ -88,15 +86,20 @@ export default function BasicInfo() {
           phoneno: form.phoneno,
           email: user.email,
           reveal_theme: selectedTemplate,
-          profile_url: profileUrl,
+          profile_url: profileUrl?? undefined,
           onboarding_step: "preferences",
         })
 
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error(error);
+        setSaving(false);
+        return; // ⛔ stop navigation if save failed
+      }
 
       console.log("UPSERT DATA:", data);
+      navigate('/preferences')
     } catch (err) {
       console.error(err);
     } finally {

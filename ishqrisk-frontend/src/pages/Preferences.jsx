@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function Preferences() {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [openTo, setOpenTo] = useState("");
@@ -37,7 +39,13 @@ export default function Preferences() {
         })
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error(error);
+        setSaving(false);
+        return; // ⛔ stop navigation if save failed
+      }
+      navigate("/qna")
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,10 +92,9 @@ export default function Preferences() {
                 key={item}
                 onClick={() => setOpenTo(item)}
                 className={`rounded-2xl border px-6 py-6 text-left transition-all duration-300
-                  ${
-                    openTo === item
-                      ? "border-[#f3b6c0] bg-[#f3b6c0]/15 shadow-lg shadow-[#f3b6c0]/30"
-                      : "border-white/10 bg-white/5 hover:bg-white/10"
+                  ${openTo === item
+                    ? "border-[#f3b6c0] bg-[#f3b6c0]/15 shadow-lg shadow-[#f3b6c0]/30"
+                    : "border-white/10 bg-white/5 hover:bg-white/10"
                   }
                   hover:-translate-y-1`}
               >
@@ -102,15 +109,14 @@ export default function Preferences() {
           <h2 className="mb-6 text-lg font-medium">Age preference</h2>
 
           <div className="flex flex-wrap gap-3">
-            {["older", "younger", "any"].map((item) => (
+            {["older", "younger", "any", "same or older", "same or younger"].map((item) => (
               <button
                 key={item}
                 onClick={() => setAgePreference(item)}
                 className={`rounded-full px-5 py-2 text-sm transition-all duration-200
-                  ${
-                    agePreference === item
-                      ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  ${agePreference === item
+                    ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
+                    : "bg-white/5 text-white/60 hover:bg-white/10"
                   }`}
               >
                 {item}
@@ -131,10 +137,9 @@ export default function Preferences() {
                 key={item}
                 onClick={() => setGenderPreference(item)}
                 className={`rounded-full px-5 py-2 text-sm transition-all duration-200
-                  ${
-                    genderPreference === item
-                      ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  ${genderPreference === item
+                    ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
+                    : "bg-white/5 text-white/60 hover:bg-white/10"
                   }`}
               >
                 {item}
@@ -161,10 +166,9 @@ export default function Preferences() {
                 key={item}
                 onClick={() => toggle(item)}
                 className={`rounded-full px-5 py-2 text-sm transition-all duration-200
-                  ${
-                    yearPreference.includes(item)
-                      ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
-                      : "bg-white/5 text-white/60 hover:bg-white/10"
+                  ${yearPreference.includes(item)
+                    ? "bg-[#f3b6c0]/25 text-[#f3b6c0] shadow shadow-[#f3b6c0]/30"
+                    : "bg-white/5 text-white/60 hover:bg-white/10"
                   }`}
               >
                 {item}
@@ -179,10 +183,9 @@ export default function Preferences() {
             onClick={handleContinue}
             disabled={saving}
             className={`rounded-full px-12 py-3 font-semibold text-black transition-all duration-300
-              ${
-                saving
-                  ? "bg-[#f3b6c0]/60 cursor-not-allowed"
-                  : "bg-[#f3b6c0] hover:scale-105 hover:shadow-xl hover:shadow-[#f3b6c0]/40"
+              ${saving
+                ? "bg-[#f3b6c0]/60 cursor-not-allowed"
+                : "bg-[#f3b6c0] hover:scale-105 hover:shadow-xl hover:shadow-[#f3b6c0]/40"
               }`}
           >
             {saving ? "Saving..." : "Continue →"}

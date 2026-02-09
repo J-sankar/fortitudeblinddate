@@ -3,12 +3,16 @@ import { Heart } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function Landing() {
-  
+
   const signIn = async () => {
     await supabase.auth.signInWithOAuth({
-      provider: "google"
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/basic`
+      }
     });
   };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-reference">
       <Navbar />
