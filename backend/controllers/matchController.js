@@ -13,23 +13,35 @@ const normalizeInterests = (interestsObj) => {
 };
 
 const prepareUser = (profile) => {
+
+  let interestsData = profile.interests;
+
+  // ⭐ FIX: handle stringified JSON
+  if (typeof interestsData === "string") {
+    try {
+      interestsData = JSON.parse(interestsData);
+    } catch {
+      interestsData = {};
+    }
+  }
+  
+
   return {
     id: profile.id,
     firstName: profile.firstName,
     lastName: profile.lastName,
     nickname: profile.nickname ?? null,
-
     age: profile.age,
-    gender: profile.gender,
-    gender_preference: profile.gender_preference ?? null,
-    age_preference: profile.age_preference ?? "any",
+    gender: profile.gender?.toLowerCase(),
+gender_preference: profile.gender_preference?.toLowerCase(),
 
+    age_preference: profile.age_preference ?? "any",
     approved: Boolean(profile.approved),
     ismatched: Boolean(profile.ismatched),
-
-    interests: normalizeInterests(profile.interests)
+    interests: normalizeInterests(interestsData)
   };
 };
+
 
 
 export const matchUsers = async (req, res) => {
@@ -38,7 +50,7 @@ export const matchUsers = async (req, res) => {
 
     /* 1️⃣ Fetch profiles */
     const { data: profiles, error: profileError } = await supabase
-      .from("test")
+      .from("users")
       .select("*");
     logger.info(profiles);
     if (profileError) {
