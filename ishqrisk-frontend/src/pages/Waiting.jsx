@@ -2,19 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Waiting() {
   const canvasRef = useRef(null);
-  const [matchFound, setMatchFound] = useState(false);
 
-  /* ---------------- MOCK MATCH FOUND ---------------- */
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMatchFound(true);
-    }, 15000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Possible values: "waiting" | "no_match" | "matched"
+  const [status, setStatus] = useState("waiting");
 
-  /* ---------------- SNOW SYSTEM (WAITING ONLY) ---------------- */
+  /* ---------------- SNOW SYSTEM (ONLY WHILE WAITING) ---------------- */
   useEffect(() => {
-    if (matchFound) return;
+    if (status !== "waiting") return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -95,8 +89,6 @@ export default function Waiting() {
           f.y = -10;
           f.x = rand(0, width);
         }
-        if (f.x < -10) f.x = width + 10;
-        if (f.x > width + 10) f.x = -10;
 
         ctx.beginPath();
         ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
@@ -108,16 +100,16 @@ export default function Waiting() {
     }
 
     animate();
-  }, [matchFound]);
+  }, [status]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
-      {!matchFound && (
+      {status === "waiting" && (
         <canvas ref={canvasRef} className="absolute inset-0 z-0" />
       )}
 
-      {/* ---------------- SOFT BLOOMS (MATCH FOUND) ---------------- */}
-      {matchFound && (
+      {/* ---------------- SOFT BLOOMS (MATCH FOUND ONLY) ---------------- */}
+      {status === "matched" && (
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="bloom bloom-1" />
           <div className="bloom bloom-2" />
@@ -126,31 +118,55 @@ export default function Waiting() {
       )}
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
-        {!matchFound ? (
-          /* -------- WAITING -------- */
+        {/* ---------------- WAITING ---------------- */}
+        {status === "waiting" && (
           <div>
             <p className="mb-3 text-xs tracking-[0.3em] text-white/40">
-              WAITING
+              SEARCHING
             </p>
 
             <h1
               className="max-w-xl text-3xl md:text-4xl text-white/90 leading-tight"
-              style={{
-                fontFamily: "Satisfy, cursive",
-                letterSpacing: "0.02em",
-              }}
+              style={{ fontFamily: "Satisfy, cursive" }}
             >
-              We’re finding someone<br />who feels right for you
+              We’re finding someone
+              <br />
+              who feels right for you
             </h1>
 
             <p className="mt-5 text-sm text-white/60">
-              Just a quiet moment before something new begins.
+              Take a breath. These things take time.
             </p>
 
             <div className="mt-14 heart-pulse" />
           </div>
-        ) : (
-          /* -------- MATCH FOUND -------- */
+        )}
+
+        {/* ---------------- NO MATCH ---------------- */}
+        {status === "no_match" && (
+          <div>
+            <p className="mb-3 text-xs tracking-widest text-white/40">
+              NOT YET
+            </p>
+
+            <h1
+              className="max-w-xl text-3xl md:text-4xl text-white/90 leading-tight"
+              style={{ fontFamily: "Satisfy, cursive" }}
+            >
+              Nothing right now —
+              <br />
+              and that’s okay
+            </h1>
+
+            <p className="mt-5 text-sm text-white/60 max-w-md mx-auto">
+              Some connections take time.
+              You’ll be notified when someone new arrives.
+            </p>
+          </div>
+        )}
+
+        {/* ---------------- MATCH FOUND ---------------- */}
+        {status === "matched" && (
           <div className="floating-card">
             <p className="mb-3 text-xs tracking-widest text-white/50">
               MATCH FOUND
@@ -167,7 +183,8 @@ export default function Waiting() {
               </h2>
 
               <p className="mt-3 text-sm text-white/60">
-                A quiet presence.  
+                A quiet presence.
+                <br />
                 A soft conversation.
               </p>
             </div>
@@ -184,7 +201,6 @@ export default function Waiting() {
           transform: rotate(-45deg);
           margin: 0 auto;
           animation: pulse 3s ease-in-out infinite;
-          box-shadow: 0 0 30px rgba(243,182,192,0.45);
         }
         .heart-pulse::before,
         .heart-pulse::after {
@@ -199,7 +215,7 @@ export default function Waiting() {
         .heart-pulse::after { left: 11px; top: 0; }
 
         .floating-card {
-          animation: float 7.5s ease-in-out infinite;
+          animation: float 7s ease-in-out infinite;
         }
 
         .card-glass {
@@ -208,9 +224,6 @@ export default function Waiting() {
           border-radius: 28px;
           background: rgba(255,255,255,0.1);
           backdrop-filter: blur(22px);
-          box-shadow:
-            0 30px 80px rgba(0,0,0,0.6),
-            inset 0 0 0 1px rgba(255,255,255,0.08);
         }
 
         .illustration {
@@ -223,7 +236,6 @@ export default function Waiting() {
           );
         }
 
-        /* ---- BLOOMS ---- */
         .bloom {
           position: absolute;
           border-radius: 50%;

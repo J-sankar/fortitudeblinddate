@@ -36,33 +36,31 @@ export default function Landing() {
         <div className="max-w-3xl text-center mt-24 relative z-10">
 
           {/* Tag */}
-          <div className="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full border border-white/15 text-sm text-white/70">
-            💬 Where real connections begin
-          </div>
+<div className="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full border border-white/15 text-sm text-white/70">
+  💬 A quieter way to meet someone
+</div>
 
-          {/* Headline */}
-          <h1 className="text-[2.2rem] leading-tight sm:text-4xl md:text-6xl font-semibold mb-6 font-[Playfair Display]">
-            Love Starts with a{" "}
-            <span className="text-[#D8A7B1]">Conversation</span>
-          </h1>
+{/* Headline */}
+<h1 className="text-[2.2rem] leading-tight sm:text-4xl md:text-6xl font-semibold mb-6 font-[Playfair Display]">
+  Love begins with a{" "}
+  <span className="text-[#D8A7B1]">conversation</span>
+</h1>
 
-          {/* Subtext */}
-          <p className="text-white/70 text-base sm:text-lg mb-10 px-2 sm:px-0">
-            No photos. No superficial judgments.
-            <br />
-            Just two people talking — and seeing where it goes.
-          </p>
+{/* Subtext */}
+<p className="text-white/70 text-base sm:text-lg mb-10 px-2 sm:px-0 font-[Inter]">
+  No photos. No pressure.
+  <br />
+  Just two people talking — and letting the connection grow naturally.
+</p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={signIn} className="bg-[#D8A7B1] text-black font-semibold px-8 py-4 sm:py-3 rounded-full hover:scale-[1.04] hover:shadow-xl hover:shadow-[#D8A7B1]/30 transition-all duration-300">
-              Start a Blind Date →
-            </button>
+{/* CTA */}
+<button
+  onClick={signIn}
+  className="bg-[#D8A7B1] text-black font-semibold px-8 py-4 rounded-full hover:scale-[1.04] hover:shadow-xl hover:shadow-[#D8A7B1]/30 transition-all duration-300"
+>
+  Start a conversation →
+</button>
 
-            <button className="border border-white/20 text-white px-8 py-4 sm:py-3 rounded-full hover:bg-white/5 hover:scale-[1.02] transition-all duration-300">
-              See How It Works
-            </button>
-          </div>
 
         </div>
       </section>

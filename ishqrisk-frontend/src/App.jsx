@@ -16,7 +16,7 @@ export default function App() {
   if (!user) {
     return (
       <Routes>
-        <Route path="*" element={<Waiting />} />
+        <Route path="*" element={<Landing />} />
       </Routes>
     );
   }
