@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate} from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { useEffect } from "react";
 
 import Landing from "./pages/Landing";
 import BasicInfo from "./pages/BasicInfo";
@@ -8,12 +9,65 @@ import Questionnaire from "./pages/Questionaire";
 import Waiting from "./pages/Waiting";
 import Chat from "./pages/Chat";
 
+const ProtectedStep = ({ step, profile, children }) => {
+  const correctRoute = getOnboardingRoute(profile);
+
+  if (profile?.onboarding_step !== step) {
+    return <Navigate to={correctRoute} replace />;
+  }
+
+  return children;
+};
+
+/* ⭐ Pure path resolver */
+const getOnboardingRoute = (profile) => {
+
+
+  if (!profile) return "/basic"; // NEW USERS → basic
+
+  switch (profile.onboarding_step) {
+    case "basic":
+      return "/basic";
+    case "preferences":
+      return "/preferences";
+    case "qna":
+      return "/qna";
+    case "waiting":
+      return "/waiting";
+    case "matched":
+      return "/chat";
+    default:
+      return "/basic";
+  }
+};
+
 export default function App() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, authLoading, profileLoading } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // ⭐ Not logged in
+  /* 🔁 Redirect logic */
+  useEffect(() => {
+    if (!user) return;
+
+    const route = getOnboardingRoute(profile);
+
+    if (location.pathname !== route) {
+      navigate(route, { replace: true });
+    }
+  }, [user, profile?.onboarding_step]);
+
+  /* 🌌 ONLY block while hydrating */
+  if (authLoading || profileLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#0c111f] text-[#ed9e6f]">
+        ✦ Restoring connection...
+      </div>
+    );
+  }
+
+  /* 🚪 Not logged in */
   if (!user) {
     return (
       <Routes>
@@ -22,27 +76,58 @@ export default function App() {
     );
   }
 
-  // ⭐ Decide onboarding redirect
-  const getOnboardingRoute = () => {
-    if (!profile || profile.onboarding_step === "basic") return "/basic";
-    if (profile.onboarding_step === "preferences") return "/preferences";
-    if (profile.onboarding_step === "qna") return "/qna";
-    return "/done";
-  };
-
+  /* 🚀 Logged-in routes */
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={getOnboardingRoute()} />} />
+      <Route path="/" element={<Navigate to={getOnboardingRoute(profile)} replace />} />
 
-      <Route path="/basic" element={<BasicInfo />} />
-      <Route path="/preferences" element={<Preferences />} />
-      <Route path="/qna" element={<Questionnaire />} />
+      <Route
+        path="/basic"
+        element={
+          <ProtectedStep step="basic" profile={profile}>
+            <BasicInfo />
+          </ProtectedStep>
+        }
+      />
 
-      <Route path="/waiting" element={<Waiting/>} />
-      <Route path="/test-chat" element={<Chat/>} />
+      <Route
+        path="/preferences"
+        element={
+          <ProtectedStep step="preferences" profile={profile}>
+            <Preferences />
+          </ProtectedStep>
+        }
+      />
 
-      {/* fallback */}
-      <Route path="*" element={<Navigate to={getOnboardingRoute()} />} />
+      <Route
+        path="/qna"
+        element={
+          <ProtectedStep step="qna" profile={profile}>
+            <Questionnaire />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/waiting"
+        element={
+          <ProtectedStep step="waiting" profile={profile}>
+            <Waiting />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/chat"
+        element={
+          <ProtectedStep step="matched" profile={profile}>
+            <Chat />
+          </ProtectedStep>
+        }
+      />
+
+      <Route path="*" element={<Navigate to={getOnboardingRoute(profile)} replace />} />
     </Routes>
+
   );
 }

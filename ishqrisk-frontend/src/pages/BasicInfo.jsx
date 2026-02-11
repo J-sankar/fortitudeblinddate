@@ -10,8 +10,8 @@ const templates = [
   { id: "expressive", name: "Expressive", vibe: "Creative · Bold" },
 ];
 
-const GENDER_OPTIONS = ["Man", "Woman", "Non-binary"];
-const YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Postgrad"]; // ⭐ Added Year Options
+const GENDER_OPTIONS = ["male", "female", "non-binary"];
+const YEAR_OPTIONS = ["1st year", "2nd year", "3rd year", "4th year"]; // ⭐ Added Year Options
 
 export default function BasicInfo() {
   const navigate = useNavigate();

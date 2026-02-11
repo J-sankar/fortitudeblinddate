@@ -59,45 +59,57 @@ export default function Questionnaire() {
   const isLastQuestion = step === questions.length - 1;
   const current = questions[step];
 
-  const handleNext = () => {
-    if (selectedOption === null || isTurning) return;
+ const handleNext = () => {
+  if (selectedOption === null || isTurning) return;
 
-    setIsTurning(true);
-    const newAnswer = { 
-      question: current.question, 
-      answer: current.options[selectedOption] 
-    };
+  setIsTurning(true);
 
-    setTimeout(() => {
-      setAnswers(prev => [...prev, newAnswer]);
-      setStep(prev => prev + 1);
-      setSelectedOption(null);
-      setIsTurning(false);
-    }, 700);
+  // ⭐ STORE ONLY INDEX (SAFE + CLEAN)
+  const newAnswer = {
+    selectedIndex: selectedOption
   };
 
-  const handleFinalSubmit = async () => {
-    setIsWarping(true); // Trigger Petal Bloom
-    
-    try {
-        const { error } = await supabase
-          .from("users")
-          .update({ 
-            qna_responses: answers,
-            onboarding_step: "waiting" 
-          })
-          .eq("id", user.id);
+  setTimeout(() => {
+    setAnswers(prev => [...prev, newAnswer]);
+    setStep(prev => prev + 1);
+    setSelectedOption(null);
+    setIsTurning(false);
+  }, 700);
+};
 
-        if (error) throw error;
-        
-        setTimeout(() => {
-            navigate("/waiting-room");
-        }, 1200);
-    } catch (err) {
-        console.error(err);
-        setIsWarping(false);
-    }
-  };
+
+const handleFinalSubmit = async () => {
+  if (!user) return;
+
+  try {
+    const formattedAnswers = {};
+
+    answers.forEach((ans, index) => {
+      const letter = String.fromCharCode(65 + ans.selectedIndex);
+      formattedAnswers[(index + 1).toString()] = letter;
+    });
+
+    console.log("FINAL INTERESTS:", formattedAnswers);
+
+    const { error } = await supabase
+      .from("users")
+      .update({
+        interests: formattedAnswers, // ⭐ EXACT STRUCTURE
+        onboarding_step: "waiting",
+        approved:true
+      })
+      .eq("id", user.id);
+
+    if (error) throw error;
+
+    navigate("/waiting-room");
+
+  } catch (err) {
+    console.error("Failed saving questionnaire:", err);
+  }
+};
+
+
 
   const ambientIcons = useMemo(() => 
     Array.from({ length: 10 }).map((_, i) => ({

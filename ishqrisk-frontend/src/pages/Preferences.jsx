@@ -155,7 +155,7 @@ export default function Preferences() {
               <Heart size={20} className="text-[#f3b6c0]" /> What are you open to?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {["Dating", "Friendship", "Open"].map((item) => (
+              {["dating", "friendship", "open"].map((item) => (
                 <button
                   key={item}
                   onClick={() => setOpenTo(item)}
@@ -179,7 +179,7 @@ export default function Preferences() {
               <Users size={20} className="text-[#f3b6c0]" /> Preferred gender
             </h2>
             <div className="flex flex-wrap gap-3">
-              {["Male", "Female", "Non-binary", "Open to all"].map((item) => (
+              {["male", "female", "non-binary", "open to all"].map((item) => (
                 <PillButton 
                   key={item} 
                   label={item} 
@@ -194,7 +194,7 @@ export default function Preferences() {
           <section className="animate-slide-up delay-3">
             <h2 className="text-white/50 text-xs uppercase tracking-widest font-bold mb-6 ml-1">Relative Age</h2>
             <div className="flex flex-wrap gap-3">
-              {["Older", "Younger", "Any", "Same or Older", "Same or Younger"].map((item) => (
+              {["older", "younger", "any", "same or older", "same or younger"].map((item) => (
                 <PillButton 
                   key={item} 
                   label={item} 

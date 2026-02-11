@@ -2,71 +2,107 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase.js";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null); // ⭐ NEW
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // ===== AUTH SESSION =====
+
+  /* ===== AUTH SESSION ===== */
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
-      setLoading(false);
+      setAuthLoading(false); // ⭐ IMPORTANT
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
+        setAuthLoading(false); // ⭐ IMPORTANT
       }
     );
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // ===== FETCH USER PROFILE + REALTIME =====
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      return;
+
+  /* ===== FETCH PROFILE + REALTIME ===== */
+  /* ===== FETCH PROFILE + REALTIME ===== */
+useEffect(() => {
+  let mounted = true;
+  let channel;
+
+  // 🚫 No user → no profile
+  if (!user?.id) {
+    setProfile(null);
+    setProfileLoading(false);
+    return;
+  }
+
+  // ⭐ VERY IMPORTANT: start loading when user changes
+  setProfileLoading(true);
+
+  const fetchProfile = async () => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!mounted) return;
+
+    setProfile(data ?? null);
+    setProfileLoading(false);
+
+    if (error) {
+      console.error("Profile fetch error:", error);
     }
+  };
 
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();   // ⭐ prevents 406 error
+  fetchProfile();
 
-      setProfile(data);
-    };
+  // ⭐ realtime subscription
+  channel = supabase
+    .channel(`users-change-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "users",
+        filter: `id=eq.${user.id}`,
+      },
+      (payload) => {
+        console.log("PROFILE UPDATE 🔄", payload.new);
+        setProfile(payload.new);
+      }
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        console.log("Realtime ready 🔥");
+      }
+    });
 
-    fetchProfile();
+  return () => {
+    mounted = false;
+    if (channel) supabase.removeChannel(channel);
+  };
+}, [user?.id]);
 
-    // ⭐ realtime auto onboarding switch
-    const channel = supabase
-      .channel("users-change")
-      .on(
-        "postgres_changes",
-        {
-          event: "*", // ⭐ IMPORTANT (upsert can be INSERT)
-          schema: "public",
-          table: "users",
-          filter: `id=eq.${user.id}`,
-        },
-        (payload) => {
-          setProfile(payload.new);
-        }
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
+    <AuthContext.Provider
+  value={{
+    user,
+    profile,
+    authLoading,
+    profileLoading,
+  }}
+>
+
       {children}
     </AuthContext.Provider>
   );

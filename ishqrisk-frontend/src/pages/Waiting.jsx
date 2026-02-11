@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
 
 export default function Waiting() {
   const canvasRef = useRef(null);
-  const navigate = useNavigate() ;
-    const handleChat = ()=>(
-        navigate("/test-chat")
-    )
+const navigate = useNavigate();
+
+    
   // Possible values: "waiting" | "no_match" | "matched"
   const [status, setStatus] = useState("waiting");
 
@@ -106,6 +107,9 @@ export default function Waiting() {
 
     animate();
   }, [status]);
+    /* ---------------- REALTIME MATCH LISTENER ---------------- */
+
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
