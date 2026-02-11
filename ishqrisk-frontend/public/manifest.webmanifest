@@ -1,7 +1,6 @@
 {
   "name": "ISHQ Risk",
   "short_name": "ISHQ",
-  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,16 +8,15 @@
   "theme_color": "#0b1220",
   "icons": [
     {
-      "src": "/icons/love-always-win.png",
+      "src": "/icons/icon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/love-always-wins.png",
+      "src": "/icons/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "maskable"
     }
   ]
 }
