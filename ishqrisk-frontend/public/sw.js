@@ -1,5 +1,5 @@
  const CACHE_NAME = "ishq-risk-pwa-v1";
-const CORE_ASSETS = ["/", "/index.html", "/manifest.webmanifest",""];
+const CORE_ASSETS = ["/", "/index.html", "/public","/src"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

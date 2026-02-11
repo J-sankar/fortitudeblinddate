@@ -34,9 +34,14 @@ export function onInstallStateChange(fn) {
 export async function promptInstall() {
   if (!deferredPrompt) return { outcome: "unavailable" };
   deferredPrompt.prompt();
-  const choice = await deferredPrompt.userChoice; // { outcome: 'accepted'|'dismissed' }
+  const choice = await deferredPrompt.userChoice;
   if (choice?.outcome !== "accepted") return { outcome: "dismissed" };
   deferredPrompt = null;
   listeners.forEach((fn) => fn(getInstallState()));
   return { outcome: "accepted" };
+}
+
+if (typeof window !== "undefined") {
+  initPwaInstallPrompt();
+  window.PWA = { getInstallState, onInstallStateChange, promptInstall };
 }
