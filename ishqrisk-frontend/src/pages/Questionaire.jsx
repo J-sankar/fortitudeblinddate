@@ -96,6 +96,7 @@ const handleFinalSubmit = async () => {
       .update({
         interests: formattedAnswers, // ⭐ EXACT STRUCTURE
         onboarding_step: "waiting",
+        approved:true
       })
       .eq("id", user.id);
 

@@ -9,8 +9,20 @@ import Questionnaire from "./pages/Questionaire";
 import Waiting from "./pages/Waiting";
 import Chat from "./pages/Chat";
 
+const ProtectedStep = ({ step, profile, children }) => {
+  const correctRoute = getOnboardingRoute(profile);
+
+  if (profile?.onboarding_step !== step) {
+    return <Navigate to={correctRoute} replace />;
+  }
+
+  return children;
+};
+
 /* ⭐ Pure path resolver */
 const getOnboardingRoute = (profile) => {
+
+
   if (!profile) return "/basic"; // NEW USERS → basic
 
   switch (profile.onboarding_step) {
@@ -68,21 +80,54 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to={getOnboardingRoute(profile)} replace />} />
-      <Route path="/basic" element={<BasicInfo />} />
-      <Route path="/preferences" element={<Preferences />} />
-      <Route path="/qna" element={<Questionnaire />} />
-      <Route path="/waiting" element={<Waiting />} />
+
+      <Route
+        path="/basic"
+        element={
+          <ProtectedStep step="basic" profile={profile}>
+            <BasicInfo />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/preferences"
+        element={
+          <ProtectedStep step="preferences" profile={profile}>
+            <Preferences />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/qna"
+        element={
+          <ProtectedStep step="qna" profile={profile}>
+            <Questionnaire />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/waiting"
+        element={
+          <ProtectedStep step="waiting" profile={profile}>
+            <Waiting />
+          </ProtectedStep>
+        }
+      />
 
       <Route
         path="/chat"
         element={
-          profile?.onboarding_step === "matched"
-            ? <Chat />
-            : <Navigate to={getOnboardingRoute(profile)} replace />
+          <ProtectedStep step="matched" profile={profile}>
+            <Chat />
+          </ProtectedStep>
         }
       />
 
       <Route path="*" element={<Navigate to={getOnboardingRoute(profile)} replace />} />
     </Routes>
+
   );
 }

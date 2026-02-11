@@ -51,30 +51,54 @@ const checkAgePreference = (pref, myAge, otherAge) => {
 
 // Check if two users match basic preferences
 const checkPreferenceMatch = (user1, user2) => {
+  console.log("---- Checking ----");
+  console.log(user1.nickname, "vs", user2.nickname);
+
   const genderMatch =
     user1.gender_preference === user2.gender &&
     user2.gender_preference === user1.gender;
 
+  console.log("Gender check:",
+    user1.gender_preference,
+    user2.gender,
+    "|",
+    user2.gender_preference,
+    user1.gender,
+    "=>",
+    genderMatch
+  );
+
   if (!genderMatch) return false;
 
-  const age1 = user1.age;
-  const age2 = user2.age;
-  if (!user1.age || !user2.age) return false;
+  if (!user1.age || !user2.age) {
+    console.log("Age missing");
+    return false;
+  }
 
+  if (!checkAgePreference(user1.age_preference, user1.age, user2.age)) {
+    console.log("User1 age pref failed");
+    return false;
+  }
 
-  if (!checkAgePreference(user1.age_preference, age1, age2)) return false;
-  if (!checkAgePreference(user2.age_preference, age2, age1)) return false;
+  if (!checkAgePreference(user2.age_preference, user2.age, user1.age)) {
+    console.log("User2 age pref failed");
+    return false;
+  }
 
   if (user1.year_preference?.length > 0) {
+    console.log("User1 year pref:", user1.year_preference, "vs", user2.year);
     if (!user1.year_preference.includes(user2.year)) return false;
   }
 
   if (user2.year_preference?.length > 0) {
+    console.log("User2 year pref:", user2.year_preference, "vs", user1.year);
     if (!user2.year_preference.includes(user1.year)) return false;
   }
 
-  return true; // ⭐ VERY IMPORTANT
+  console.log("✅ Preference matched");
+  return true;
 };
+
 
 
 // Calculate compatibility score for a specific question

@@ -83,11 +83,12 @@ export const matchUsers = async (req, res) => {
           u.gender &&
           u.gender_preference &&
           u.age &&
+          u.year&&
           u.interests.length > 0
       );
+      for (const user of  users) {logger.info(user)}
 
     logger.info(`Prepared ${users.length} users for matching`);
-
     if (users.length < 2) {
       return res.json({ success: true, matchedPairs: 0 });
     }
