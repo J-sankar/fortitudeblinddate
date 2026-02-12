@@ -71,7 +71,7 @@ export default function App() {
   if (!user) {
     return (
       <Routes>
-        <Route path="*" element={<Landing />} />
+        <Route path="*" element={<Chat />} />
       </Routes>
     );
   }
