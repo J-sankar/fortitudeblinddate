@@ -9,7 +9,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const { session } = useSession();
   const { user, profile } = useAuth();
-  
+  console.log(session)
   const scrollRef = useRef(null);
   const typingChannelRef = useRef(null);
   const lastTypingSent = useRef(0);
@@ -20,7 +20,7 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [viewportHeight, setViewportHeight] = useState("100dvh");
-  
+
   // Timer & Stats States
   const [timeLeft, setTimeLeft] = useState("--:--");
   const [localMessageCount, setLocalMessageCount] = useState(session?.message_count || 0);
@@ -36,23 +36,38 @@ export default function Chat() {
     return () => window.visualViewport?.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- 2. Live Countdown Logic ---
+  // --- 2. Live Countdown Logic (Synchronized to end_time) ---
   useEffect(() => {
-    if (!session?.created_at) return;
+    if (!session?.end_time) return;
+
     const calculateTime = () => {
-      const startTime = new Date(session.created_at).getTime();
-      const endTime = startTime + 15 * 60 * 1000; // 15 min session
+      const endTime = new Date(session.end_time).getTime();
       const now = new Date().getTime();
       const diff = endTime - now;
-      if (diff <= 0) { setTimeLeft("00:00"); return; }
-      const mins = Math.floor((diff / 1000 / 60) % 60);
-      const secs = Math.floor((diff / 1000) % 60);
-      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+
+      if (diff <= 0) {
+        setTimeLeft("00:00:00");
+        return;
+      }
+
+      // Calculating Hours, Minutes, and Seconds since this is a 24h session
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      // If more than an hour left, show HH:MM:SS, else just MM:SS
+      const display = hours > 0
+        ? `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+        : `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      setTimeLeft(display);
     };
+
     const timer = setInterval(calculateTime, 1000);
-    calculateTime();
+    calculateTime(); // Run immediately on mount
+
     return () => clearInterval(timer);
-  }, [session?.created_at]);
+  }, [session?.end_time]);
 
   // --- 3. Supabase Message Loading & Realtime ---
   useEffect(() => {
@@ -64,44 +79,54 @@ export default function Chat() {
         .select("*")
         .eq("session_id", session.id)
         .order("created_at", { ascending: true });
-        
-      if (data) setMessages(data.map(m => ({ 
-        id: m.id, 
-        sender: m.sender_id === user.id ? "me" : "other", 
-        text: m.text 
+
+      if (data) setMessages(data.map(m => ({
+        id: m.id,
+        sender: m.sender_id === user.id ? "me" : "other",
+        text: m.text
       })));
       setLoadingMessages(false);
     };
     loadData();
 
-    const channel = supabase.channel(`chat-room-${session.id}`)
-      .on("postgres_changes", { 
-        event: "INSERT", 
-        schema: "public", 
-        table: "messages", 
-        filter: `session_id=eq.${session.id}` 
+    // Create one channel for the session
+    const channel = supabase.channel(`session-${session.id}`)
+      // Listen for ALL message changes (INSERT and DELETE)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "messages",
+        filter: `session_id=eq.${session.id}`
       }, (payload) => {
-        if (payload.new.sender_id !== user.id) {
-          setMessages(prev => [...prev, { 
-            id: payload.new.id, 
-            sender: "other", 
-            text: payload.new.text 
-          }]);
+        if (payload.eventType === "INSERT") {
+          if (payload.new.sender_id !== user.id) {
+            setMessages(prev => [...prev, {
+              id: payload.new.id,
+              sender: "other",
+              text: payload.new.text
+            }]);
+          }
+        } else if (payload.eventType === "DELETE") {
+          // payload.old.id is only available if Replica Identity is FULL
+          setMessages(prev => prev.filter(m => m.id !== payload.old.id));
         }
       })
-      .on("postgres_changes", { 
-        event: "UPDATE", 
-        schema: "public", 
-        table: "sessions", 
-        filter: `id=eq.${session.id}` 
+      // Listen for Session Updates (The Message Count)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "sessions",
+        filter: `id=eq.${session.id}`
       }, (payload) => {
+        // Sync the local count with the DB (including the reset to 25)
         setLocalMessageCount(payload.new.message_count);
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [session?.id, user?.id]);
-
   // --- 4. Typing Broadcast Indicator ---
   useEffect(() => {
     if (!session?.id) return;
@@ -118,7 +143,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
 
@@ -143,7 +168,7 @@ export default function Chat() {
     if (!input.trim() || !session) return;
     const textToSend = input;
     const tempId = Date.now();
-    
+
     // Optimistic Update
     setMessages(prev => [...prev, { id: tempId, sender: "me", text: textToSend }]);
     setInput("");
@@ -151,7 +176,7 @@ export default function Chat() {
     const { error } = await supabase
       .from("messages")
       .insert([{ session_id: session.id, sender_id: user.id, text: textToSend }]);
-    
+
     if (error) console.error("Send error:", error);
   };
 
@@ -160,22 +185,41 @@ export default function Chat() {
   return (
     <div className="relative w-full text-white flex flex-col overflow-hidden bg-[#0c111f]" style={{ height: viewportHeight }}>
       {/* Header */}
+
+
+      {/* Header Progress Section */}
       <div className="flex-none bg-[#0c111f]/60 backdrop-blur-xl border-b border-white/10 px-6 py-4 z-20">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm font-bold text-[#ed9e6f] uppercase tracking-widest">{profile?.nickname}</p>
-            <p className="text-[10px] text-white/40 uppercase">✦ Anonymous Blind Date</p>
+            <p className="text-sm font-bold text-[#ed9e6f] uppercase tracking-widest">
+              {user?.id === session?.user_a ? session?.nickname_b : session?.nickname_a}
+            </p>
+            <p className="text-[10px] text-white/40 uppercase">✦ Anonymous Match</p>
           </div>
           <div className="text-right">
             <p className="text-sm font-mono font-bold text-[#b66570]">{timeLeft}</p>
             <p className="text-[9px] text-white/30 uppercase">Time Remaining</p>
           </div>
         </div>
-        <div className="mt-3 w-full h-[1.5px] bg-white/5 rounded-full overflow-hidden">
-          <motion.div 
-            animate={{ width: `${(localMessageCount / MAX_MESSAGES) * 100}%` }} 
-            className="h-full bg-gradient-to-r from-[#ed9e6f] to-[#b66570]" 
+
+        {/* 📊 Message Count Progress Bar */}
+        <div className="mt-3 w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            animate={{
+              width: `${(localMessageCount / MAX_MESSAGES) * 100}%`,
+              backgroundColor: localMessageCount > 90 ? "#ef4444" : "#ed9e6f"
+            }}
+            className="h-full"
           />
+        </div>
+
+        <div className="flex justify-between mt-1">
+          <p className={`text-[8px] uppercase tracking-widest ${localMessageCount > 90 ? "text-red-500 animate-pulse" : "text-white/20"}`}>
+            {localMessageCount} / {MAX_MESSAGES} Whispers
+          </p>
+          {localMessageCount >= 100 && (
+            <p className="text-[8px] text-[#ed9e6f] uppercase animate-bounce">Fading oldest whispers...</p>
+          )}
         </div>
       </div>
 
@@ -183,23 +227,22 @@ export default function Chat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-hide">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
-            <motion.div 
-              key={msg.id} 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
             >
-              <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[15px] shadow-xl ${
-                msg.sender === "me" 
-                ? "bg-[#ed9e6f] text-[#0c111f] rounded-tr-none" 
+              <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[15px] shadow-xl ${msg.sender === "me"
+                ? "bg-[#ed9e6f] text-[#0c111f] rounded-tr-none"
                 : "bg-[#2d1f44]/80 border border-white/10 text-white rounded-tl-none"
-              }`}>
+                }`}>
                 {msg.text}
               </div>
             </motion.div>
           ))}
         </AnimatePresence>
-        
+
         {isTyping && (
           <div className="flex justify-start">
             <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 flex gap-1 animate-pulse">
@@ -221,8 +264,8 @@ export default function Chat() {
             placeholder="Whisper to the stars..."
             className="flex-1 bg-transparent px-5 py-2 text-sm outline-none placeholder:text-white/20"
           />
-          <button 
-            onClick={sendMessage} 
+          <button
+            onClick={sendMessage}
             className="bg-[#ed9e6f] text-[#0c111f] p-2.5 rounded-full active:scale-90 transition-all"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
