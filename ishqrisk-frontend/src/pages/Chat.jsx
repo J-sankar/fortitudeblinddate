@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Chat() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const scrollRef = useRef(null);
   const typingChannelRef = useRef(null);
   const lastTypingSent = useRef(0);
@@ -26,6 +26,23 @@ export default function Chat() {
   const [localMessageCount, setLocalMessageCount] = useState(session?.message_count || 0);
   const MAX_MESSAGES = 100;
 
+
+  const handleRevealDecision = async (choice) => {
+    const isUserA = user.id === session.user_a;
+    const columnToUpdate = isUserA ? "reveal_a" : "reveal_b";
+
+    const { error } = await supabase
+      .from("sessions")
+      .update({ [columnToUpdate]: choice })
+      .eq("id", session.id);
+
+    if (!error) {
+      // Navigate to a waiting/results screen
+      navigate("/reveal-result", { state: { sessionId: session.id } });
+    } else {
+      console.error("Reveal update error:", error);
+    }
+  };
   // --- 1. Viewport Height Fix (Keyboard Smoothing) ---
   useEffect(() => {
     const handleResize = () => {
@@ -36,14 +53,26 @@ export default function Chat() {
     return () => window.visualViewport?.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- 2. Live Countdown Logic ---
+  // --- 2. Live Countdown Logic (Synchronized to end_time) ---
   useEffect(() => {
     if (!session?.end_time) return;
 
     const calculateTime = () => {
+      if (!session?.end_time) return;
+
+      // 1. Get the DB time (UTC)
       const dbDate = new Date(session.end_time);
+
+      // 2. Get the Current Time in IST specifically
+      // We use Date.now() + offset to ensure we are comparing apples to apples
       const now = new Date();
-      const diff = dbDate.getTime() - now.getTime();
+      const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 mins in milliseconds
+      const adjustedEndTime = dbDate.getTime()
+      // Convert both to a common "Absolute" time
+    
+      const nowMs = now.getTime();
+
+      const diff = adjustedEndTime - nowMs;
 
       if (diff <= 0) {
         setTimeLeft("00:00:00");
@@ -51,6 +80,7 @@ export default function Chat() {
         return;
       }
 
+      // Formatting logic remains the same
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const secs = Math.floor((diff % (1000 * 60)) / 1000);
@@ -63,11 +93,12 @@ export default function Chat() {
     };
 
     const timer = setInterval(calculateTime, 1000);
-    calculateTime();
+    calculateTime(); // Run immediately on mount
+
     return () => clearInterval(timer);
   }, [session?.end_time]);
 
-  // --- 3. Unified Realtime Channel (Messages + Session Updates) ---
+  // --- 3. Supabase Message Loading & Realtime ---
   useEffect(() => {
     if (!session?.id || !user?.id) return;
 
@@ -87,7 +118,9 @@ export default function Chat() {
     };
     loadData();
 
-    const channel = supabase.channel(`session-room-${session.id}`)
+    // Create one channel for the session
+    const channel = supabase.channel(`session-${session.id}`)
+      // Listen for ALL message changes (INSERT and DELETE)
       .on("postgres_changes", {
         event: "*",
         schema: "public",
@@ -103,25 +136,27 @@ export default function Chat() {
             }]);
           }
         } else if (payload.eventType === "DELETE") {
-          // Removes messages immediately when DB trigger trims them
+          // payload.old.id is only available if Replica Identity is FULL
           setMessages(prev => prev.filter(m => m.id !== payload.old.id));
         }
       })
+      // Listen for Session Updates (The Message Count)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "sessions",
         filter: `id=eq.${session.id}`
       }, (payload) => {
-        // ⭐ Fixed: Real-time count update
+        // Sync the local count with the DB (including the reset to 25)
         setLocalMessageCount(payload.new.message_count);
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [session?.id, user?.id]);
-
-  // --- 4. Typing Indicators ---
+  // --- 4. Typing Broadcast Indicator ---
   useEffect(() => {
     if (!session?.id) return;
     typingChannelRef.current = supabase.channel(`typing-${session.id}`);
@@ -141,11 +176,13 @@ export default function Chat() {
     }
   }, [messages, isTyping]);
 
-  // --- 5. Handlers ---
+  // --- 5. Action Handlers ---
   const handleInputChange = (e) => {
     const val = e.target.value;
     setInput(val);
+
     const now = Date.now();
+    // Throttle typing events to once every 2 seconds to avoid REST fallback
     if (typingChannelRef.current?.state === 'joined' && now - lastTypingSent.current > 2000) {
       typingChannelRef.current.send({
         type: "broadcast",
@@ -157,10 +194,11 @@ export default function Chat() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !session || isExpired) return;
+    if (!input.trim() || !session) return;
     const textToSend = input;
     const tempId = Date.now();
 
+    // Optimistic Update
     setMessages(prev => [...prev, { id: tempId, sender: "me", text: textToSend }]);
     setInput("");
 
@@ -171,25 +209,14 @@ export default function Chat() {
     if (error) console.error("Send error:", error);
   };
 
-  const handleRevealDecision = async (choice) => {
-    const isUserA = user.id === session.user_a;
-    const columnToUpdate = isUserA ? "reveal_a" : "reveal_b";
-
-    const { error } = await supabase
-      .from("sessions")
-      .update({ [columnToUpdate]: choice })
-      .eq("id", session.id);
-
-    if (!error) {
-      navigate("/reveal-result", { state: { sessionId: session.id } });
-    }
-  };
-
   if (loadingMessages) return <div className="h-screen bg-[#0c111f] flex items-center justify-center text-[#ed9e6f]">✦ Initializing...</div>;
 
   return (
     <div className="relative w-full text-white flex flex-col overflow-hidden bg-[#0c111f]" style={{ height: viewportHeight }}>
       {/* Header */}
+
+
+      {/* Header Progress Section */}
       <div className="flex-none bg-[#0c111f]/60 backdrop-blur-xl border-b border-white/10 px-6 py-4 z-20">
         <div className="flex justify-between items-center">
           <div>
@@ -204,7 +231,7 @@ export default function Chat() {
           </div>
         </div>
 
-        {/* Message Progress Bar */}
+        {/* 📊 Message Count Progress Bar */}
         <div className="mt-3 w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
           <motion.div
             animate={{
@@ -214,6 +241,7 @@ export default function Chat() {
             className="h-full"
           />
         </div>
+
         <div className="flex justify-between mt-1">
           <p className={`text-[8px] uppercase tracking-widest ${localMessageCount > 90 ? "text-red-500 animate-pulse" : "text-white/20"}`}>
             {localMessageCount} / {MAX_MESSAGES} Whispers
@@ -224,7 +252,7 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Messages Area */}
+      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-hide">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
@@ -243,9 +271,10 @@ export default function Chat() {
             </motion.div>
           ))}
         </AnimatePresence>
-        {isTyping && !isExpired && (
-          <div className="flex justify-start animate-pulse">
-            <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 flex gap-1">
+
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 flex gap-1 animate-pulse">
               <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce" />
               <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce [animation-delay:0.2s]" />
               <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce [animation-delay:0.4s]" />
@@ -254,24 +283,25 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Input Area */}
+      {/* Input */}
+      {/* --- Modified Input Area --- */}
       <div className="p-4 pb-8 flex-none bg-[#0c111f]">
         <motion.div
           layout
-          className={`flex gap-2 items-center bg-[#2d1f44]/90 border border-white/10 rounded-full p-1.5 shadow-2xl ${isExpired ? "opacity-40 grayscale pointer-events-none" : ""}`}
+          className={`flex gap-2 items-center bg-[#2d1f44]/90 border border-white/10 rounded-full p-1.5 shadow-2xl ${isExpired ? "opacity-50 pointer-events-none" : ""}`}
         >
           <input
-            disabled={isExpired}
+            disabled={isExpired} // ⭐ Block typing when time is up
             value={input}
             onChange={handleInputChange}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => e.key === "Enter" && !isExpired && sendMessage()}
             placeholder={isExpired ? "The stars have faded..." : "Whisper to the stars..."}
             className="flex-1 bg-transparent px-5 py-2 text-sm outline-none placeholder:text-white/20"
           />
           <button
             disabled={isExpired}
             onClick={sendMessage}
-            className="bg-[#ed9e6f] text-[#0c111f] p-2.5 rounded-full active:scale-90 transition-all"
+            className="bg-[#ed9e6f] text-[#0c111f] p-2.5 rounded-full active:scale-90 transition-all disabled:grayscale"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
               <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
@@ -279,8 +309,6 @@ export default function Chat() {
           </button>
         </motion.div>
       </div>
-
-      {/* Expiry Modal */}
       <AnimatePresence>
         {isExpired && (
           <motion.div
@@ -295,6 +323,7 @@ export default function Chat() {
               <p className="text-white/60 text-sm mb-10 leading-relaxed">
                 Your time in the shadows is over. Will you reveal your true self?
               </p>
+
               <div className="flex flex-col gap-4">
                 <button
                   onClick={() => handleRevealDecision(true)}
