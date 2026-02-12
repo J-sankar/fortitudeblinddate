@@ -1,6 +1,6 @@
 {
-  "name": "ISHQ Risk",
-  "short_name": "ISHQ",
+  "name": "Ishq Risk",
+  "short_name": "Ishq",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -8,14 +8,14 @@
   "theme_color": "#0b1220",
   "icons": [
     {
-      "src": "/icons/icon.png",
+      "src": "/icons/icon.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg"
     },
     {
-      "src": "/icons/icon.png",
+      "src": "/icons/icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg",
       "purpose": "maskable"
     }
   ]
