@@ -66,10 +66,9 @@ export default function Chat() {
       // 2. Get the Current Time in IST specifically
       // We use Date.now() + offset to ensure we are comparing apples to apples
       const now = new Date();
-      const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 mins in milliseconds
       const adjustedEndTime = dbDate.getTime()
       // Convert both to a common "Absolute" time
-    
+
       const nowMs = now.getTime();
 
       const diff = adjustedEndTime - nowMs;
@@ -253,13 +252,15 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
+      {/* Messages Area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollbar-hide">
+        {/* Messages List */}
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
             >
               <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-[15px] shadow-xl ${msg.sender === "me"
@@ -272,15 +273,34 @@ export default function Chat() {
           ))}
         </AnimatePresence>
 
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 flex gap-1 animate-pulse">
-              <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce" />
-              <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce [animation-delay:0.2s]" />
-              <span className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full animate-bounce [animation-delay:0.4s]" />
-            </div>
-          </div>
-        )}
+        {/* Smoother Typing Indicator */}
+        <AnimatePresence>
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 5, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2 }}
+              className="flex justify-start"
+            >
+              <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/5 flex gap-1.5 items-center">
+                {[0, 0.2, 0.4].map((delay) => (
+                  <motion.span
+                    key={delay}
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      delay: delay,
+                      ease: "easeInOut"
+                    }}
+                    className="w-1.5 h-1.5 bg-[#ed9e6f] rounded-full"
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Input */}
