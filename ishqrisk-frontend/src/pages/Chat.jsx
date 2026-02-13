@@ -132,11 +132,7 @@ export default function Chat() {
 
   // --- 3. Supabase Message Loading & Realtime ---
   useEffect(() => {
-    const test = supabase.channel(`session-${session.id}`);
-
-test.subscribe((status) => {
-  console.log("Realtime status:", status);
-});
+    
 
     if (!session?.id || !user?.id) return;
 
