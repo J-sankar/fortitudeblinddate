@@ -60,7 +60,7 @@ export default function Reveal() {
             // 3️⃣ Fetch partner profile
             const { data: partnerData } = await supabase
                 .from("users")
-                .select("id, firstName, lastName, gender, year, phoneno, reveal_theme")
+                .select("id, firstName, lastName, gender, year, phoneno, reveal_theme, instagram_id")
                 .eq("id", partnerId)
                 .single();
 
@@ -189,7 +189,7 @@ export default function Reveal() {
             )}
 
             <div className="card-wrapper">
-                <div className="identity-card">
+                <div className="identity-card relative">
                     <img
                         src={templateImage}
                         alt="Identity Template"
@@ -221,20 +221,19 @@ export default function Reveal() {
                                         : "Identity Only"}
                                 </span>
 
-                                {partner.instagram_id && (
-                                    <div className="contact-box mt-3">
-                                        <p className="text-[9px] font-bold text-black/20 uppercase tracking-tighter mb-1">
-                                            Instagram
-                                        </p>
-                                        <span className="value">
-                                            @{partner.instagram_id}
-                                        </span>
-                                    </div>
-                                )}
 
                             </div>
+
+
                         </div>
+
+                        {partner.instagram_id && (
+                            <p className="absolute bottom-5 right-5 text-[10px] text-black/35 tracking-[0.2em] italic select-none">
+                                @{partner.instagram_id}
+                            </p>
+                        )}
                     </div>
+
                 </div>
             </div>
 
