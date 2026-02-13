@@ -18,6 +18,18 @@ export default function Reveal() {
 
     // ⭐ choose your template here
 
+    useEffect(() => {
+        const blockBack = () => {
+            window.history.pushState(null, "", window.location.href);
+        };
+
+        window.history.pushState(null, "", window.location.href);
+        window.addEventListener("popstate", blockBack);
+
+        return () => window.removeEventListener("popstate", blockBack);
+    }, []);
+
+
     const exitReveal = async () => {
         await supabase
             .from("users")
