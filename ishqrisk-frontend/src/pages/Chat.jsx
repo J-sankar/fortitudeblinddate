@@ -27,20 +27,31 @@ export default function Chat() {
   const MAX_MESSAGES = 100;
 
 
-  const handleRevealDecision = async (choice) => {
+  const handleRevealDecision = async (choiceType) => {
     const isUserA = user.id === session.user_a;
-    const columnToUpdate = isUserA ? "reveal_a" : "reveal_b";
+
+    // Map choices to your DB columns
+    const updates = isUserA
+      ? {
+        reveal_a: choiceType !== 'deny',
+        phone_reveal_a: choiceType === 'full'
+      }
+      : {
+        reveal_b: choiceType !== 'deny',
+        phone_reveal_b: choiceType === 'full'
+      };
 
     const { error } = await supabase
       .from("sessions")
-      .update({ [columnToUpdate]: choice })
+      .update(updates)
       .eq("id", session.id);
 
     if (!error) {
-      // Navigate to a waiting/results screen
-      navigate("/reveal-result", { state: { sessionId: session.id } });
-    } else {
-      console.error("Reveal update error:", error);
+      if (choiceType === 'deny') {
+        navigate("/"); // Safe exit to landing
+      } else {
+        navigate("/reveal", { state: { session } });
+      }
     }
   };
   // --- 1. Viewport Height Fix (Keyboard Smoothing) ---
@@ -346,16 +357,22 @@ export default function Chat() {
 
               <div className="flex flex-col gap-4">
                 <button
-                  onClick={() => handleRevealDecision(true)}
+                  onClick={() => handleRevealDecision('full')}
                   className="w-full bg-[#ed9e6f] text-[#0c111f] font-bold py-4 rounded-2xl active:scale-95 transition-all"
                 >
-                  ✦ REVEAL IDENTITY
+                  ✦ REVEAL WITH PHONE NUMBER
                 </button>
                 <button
-                  onClick={() => handleRevealDecision(false)}
+                  onClick={() => handleRevealDecision('name')}
+                  className="w-full bg-white/10 border border-white/20 text-[#ed9e6f] font-bold py-4 rounded-2xl active:scale-95 transition-all"
+                >
+                  ✦ REVEAL NAME ONLY
+                </button>
+                <button
+                  onClick={() => handleRevealDecision('deny')}
                   className="w-full bg-white/5 border border-white/10 text-white/40 py-4 rounded-2xl active:scale-95 transition-all"
                 >
-                  STAY ANONYMOUS
+                  STAY ANONYMOUS & EXIT
                 </button>
               </div>
             </div>

@@ -10,6 +10,7 @@ import Waiting from "./pages/Waiting";
 import Chat from "./pages/Chat";
 /* ... other imports ... */
 import Match from "./pages/Match";
+import Reveal from "./pages/Reveal";
 
 const ProtectedStep = ({ step, profile, children }) => {
   // ⭐ Allow new users to access basic onboarding
@@ -135,6 +136,15 @@ export default function App() {
         element={
           <ProtectedStep step="matched" profile={profile}>
             <Chat />
+          </ProtectedStep>
+        }
+      />
+
+      <Route
+        path="/reveal"
+        element={
+          <ProtectedStep step="matched" profile={profile}>
+            <Reveal />
           </ProtectedStep>
         }
       />
